@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "pomodoro",
+  "version": "0.1.0",
+  "identifier": "com.osmandulundu.pomodoro",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "pomodoro",
+        "width": 400,
+        "height": 640,
+        "minWidth": 400,
+        "minHeight": 620,
+        "resizable": true,
+        "decorations": true,
+        "transparent": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "resources": [
+      "../public/sounds/*",
+      "icons/work.png",
+      "icons/short-break.png",
+      "icons/long-break.png"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/work.png",
+      "icons/short-break.png",
+      "icons/long-break.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

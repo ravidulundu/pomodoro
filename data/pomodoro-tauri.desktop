@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Pomodoro Pro
+Comment=Stay focused with a professional Pomodoro timer
+Exec=pomodoro-tauri
+Icon=pomodoro-tauri
+Terminal=false
+Type=Application
+Categories=Utility;Clock;
+Keywords=pomodoro;timer;productivity;
+StartupWMClass=pomodoro
