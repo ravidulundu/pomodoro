@@ -298,8 +298,6 @@ pub fn run() {
             // Tray oluştur
             build_tray(app)?;
 
-            // Tray oluştur
-            build_tray(app)?;
 
 
             // Global kısayol: Ctrl+Alt+P → timer toggle
