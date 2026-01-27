@@ -298,34 +298,9 @@ pub fn run() {
             // Tray oluştur
             build_tray(app)?;
 
-            // App menü (Native sistem menüleri)
-            use tauri::menu::{Submenu};
-            let app_handle = app.handle();
-            let file_menu = Submenu::with_id(app_handle, "file", "Dosya", true)?;
-            let quit_item = MenuItem::with_id(app_handle, "quit", "Çıkış", true, None::<&str>)?;
-            file_menu.append(&quit_item)?;
+            // Tray oluştur
+            build_tray(app)?;
 
-            let edit_menu = Submenu::with_id(app_handle, "edit", "Düzenle", true)?;
-            // Standart kopyala/yapıştır vb. (isteğe bağlı eklenebilir)
-
-            let help_menu = Submenu::with_id(app_handle, "help", "Yardım", true)?;
-            let about_item = MenuItem::with_id(app_handle, "about", "Hakkında", true, None::<&str>)?;
-            help_menu.append(&about_item)?;
-
-            let menu = Menu::with_items(app_handle, &[&file_menu, &edit_menu, &help_menu])?;
-            app.set_menu(menu)?;
-
-            // Menu Event Handling
-            app.on_menu_event(move |app_handle, event| {
-                match event.id.as_ref() {
-                    "quit" => app_handle.exit(0),
-                    "about" => {
-                        // Frontend'e event göndererek AboutDialog'u açtırabiliriz
-                        let _ = app_handle.emit("open-about", ());
-                    }
-                    _ => {}
-                }
-            });
 
             // Global kısayol: Ctrl+Alt+P → timer toggle
             app.global_shortcut().on_shortcut(
