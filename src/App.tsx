@@ -47,6 +47,8 @@ function App() {
 
   // Event listener'ları
   useEffect(() => {
+    let unlisten: (() => void) | undefined;
+
     // Bildirim aksiyonlarını kaydet
     import("@tauri-apps/plugin-notification")
       .then(({ registerActionTypes, onAction }) => {
@@ -59,7 +61,7 @@ function App() {
             id: "break-done",
             actions: [{ id: "start-work", title: "Çalışmaya Başla" }],
           },
-        ]).catch(() => {});
+        ]).catch((e) => console.error("Notification action types failed:", e));
 
         onAction(({ actionTypeId }) => {
           const s = useTimerStore.getState();
@@ -68,9 +70,19 @@ function App() {
           } else if (actionTypeId === "break-done" && !s.isActive) {
             s.toggle();
           }
-        });
+        })
+          .then((ul) => {
+            unlisten = ul;
+          })
+          .catch((e) =>
+            console.error("Notification Action Listener failed:", e),
+          );
       })
-      .catch(() => {});
+      .catch((e) => console.error("Notification import failed:", e));
+
+    return () => {
+      if (unlisten) unlisten();
+    };
 
     const store = useTimerStore.getState;
     const unlisteners = [
