@@ -23,6 +23,10 @@
     "notification:allow-remove-active",
     "notification:allow-request-permission",
     "notification:allow-show",
+    "core:event:allow-listen",
+    "core:event:allow-emit",
+    "core:event:allow-unlisten",
+    "core:app:allow-register-listener",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister"
   ]
