@@ -3,7 +3,7 @@ src-tauri/target
 src-tauri/gen
 
 # makepkg build artifacts
-src/pomodoro-tauri-*/
+src/pomodoro-*/
 pkg/
 *.pkg.tar.*
 *.tar.gz
