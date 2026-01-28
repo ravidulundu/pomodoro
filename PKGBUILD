@@ -9,7 +9,7 @@ license=('GPL-3.0-or-later')
 depends=('webkit2gtk-4.1' 'libayatana-appindicator' 'sqlite')
 makedepends=('rust' 'npm' 'cargo' 'nodejs')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('fee15b1b7ac1747ab8d7b6ff1205d289c37f736e141b2d50a11ac1505d119ca8')
 
 build() {
   cd "pomodoro-$pkgver"

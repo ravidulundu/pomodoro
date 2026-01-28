@@ -14,6 +14,6 @@ pkgbase = pomodoro-tauri
 	depends = libayatana-appindicator
 	depends = sqlite
 	source = pomodoro-tauri-0.1.0.tar.gz::https://github.com/ravidulundu/pomodoro/archive/v0.1.0.tar.gz
-	sha256sums = SKIP
+	sha256sums = fee15b1b7ac1747ab8d7b6ff1205d289c37f736e141b2d50a11ac1505d119ca8
 
 pkgname = pomodoro-tauri
