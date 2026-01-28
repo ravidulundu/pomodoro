@@ -2,20 +2,175 @@
 
 This document outlines the plan for adding multi-language support to Pomodoro Timer.
 
+## 🎯 Critical Requirement
+
+> **The app MUST automatically detect system language and adapt accordingly.**
+> No manual configuration should be required for basic usage.
+
 ## Target Languages
 
 | Language | Code | Priority | Status |
 |----------|------|----------|--------|
-| Turkish | `tr` | Current | ✅ Default |
-| English | `en` | High | 🔲 Planned |
+| English | `en` | High | 🔲 Planned (Default fallback) |
+| Turkish | `tr` | High | ✅ Current |
 | Brazilian Portuguese | `pt-BR` | Medium | 🔲 Planned |
 
-## Goals
+## Goals (Priority Order)
 
-1. **System Language Detection**: Automatically detect and use system locale
-2. **Fallback Chain**: `system_locale → en → tr`
-3. **Runtime Switching**: Allow users to change language in settings
-4. **Persistent Preference**: Save user's language choice
+1. **🔴 CRITICAL: System Language Detection**
+   - Automatically detect system locale (`$LANG`, `$LC_ALL`, `$LANGUAGE`)
+   - Zero configuration required
+   - Works on first launch
+
+2. **🔴 CRITICAL: Fallback Chain**
+   ```
+   system_locale → regional_variant → base_language → en
+
+   Example: pt_BR.UTF-8 → pt-BR → pt → en
+   ```
+
+3. **🟡 IMPORTANT: Seamless Experience**
+   - App language matches desktop environment
+   - Notifications in system language
+   - Tray menu in system language
+
+4. **🟢 OPTIONAL: Manual Override**
+   - Settings option to override system language
+   - Persistent preference (only if manually changed)
+
+---
+
+## Phase 0: System Locale Detection (CRITICAL)
+
+This phase MUST be completed first. Everything else depends on it.
+
+### 0.1 Linux Locale Detection
+
+```typescript
+// src/i18n/detectLocale.ts
+
+/**
+ * Detects system locale from environment variables
+ * Priority: LANGUAGE > LC_ALL > LC_MESSAGES > LANG
+ */
+export async function detectSystemLocale(): Promise<string> {
+  // In Tauri, we can get env vars from Rust
+  const locale = await invoke<string>('get_system_locale');
+  return parseLocale(locale);
+}
+
+function parseLocale(locale: string): string {
+  // "tr_TR.UTF-8" → "tr"
+  // "pt_BR.UTF-8" → "pt-BR"
+  // "en_US.UTF-8" → "en"
+
+  const match = locale.match(/^([a-z]{2})(?:_([A-Z]{2}))?/);
+  if (!match) return 'en';
+
+  const [, lang, region] = match;
+
+  // Special case for regional variants we support
+  if (lang === 'pt' && region === 'BR') return 'pt-BR';
+
+  return lang;
+}
+```
+
+### 0.2 Rust Backend Locale Detection
+
+```rust
+// src-tauri/src/locale.rs
+
+use std::env;
+
+#[tauri::command]
+pub fn get_system_locale() -> String {
+    // Priority order for Linux
+    env::var("LANGUAGE")
+        .or_else(|_| env::var("LC_ALL"))
+        .or_else(|_| env::var("LC_MESSAGES"))
+        .or_else(|_| env::var("LANG"))
+        .unwrap_or_else(|_| String::from("en_US.UTF-8"))
+}
+
+// Alternative: Use sys-locale crate
+// use sys_locale::get_locale;
+// get_locale().unwrap_or_else(|| String::from("en"))
+```
+
+### 0.3 Integration with Desktop Environment
+
+```rust
+// For more accurate detection, also check:
+// - GNOME: gsettings get org.gnome.system.locale region
+// - KDE: ~/.config/plasma-localerc
+// - XDG: ~/.config/locale.conf
+
+use std::process::Command;
+
+fn get_desktop_locale() -> Option<String> {
+    // Try gsettings first (GNOME/GTK)
+    if let Ok(output) = Command::new("gsettings")
+        .args(["get", "org.gnome.system.locale", "region"])
+        .output()
+    {
+        if output.status.success() {
+            let locale = String::from_utf8_lossy(&output.stdout);
+            return Some(locale.trim().trim_matches('\'').to_string());
+        }
+    }
+
+    // Fallback to env vars
+    None
+}
+```
+
+### 0.4 Initialization Flow
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    App Startup                          │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│  1. Check localStorage for manual override              │
+│     → If exists, use it                                 │
+└─────────────────────────────────────────────────────────┘
+                           │ (no override)
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│  2. Detect system locale via Rust backend               │
+│     → LANGUAGE > LC_ALL > LC_MESSAGES > LANG            │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│  3. Parse locale string                                 │
+│     → "pt_BR.UTF-8" → "pt-BR"                          │
+│     → "tr_TR.UTF-8" → "tr"                             │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│  4. Check if language is supported                      │
+│     → Supported: en, tr, pt-BR                         │
+└─────────────────────────────────────────────────────────┘
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+┌──────────────────────┐   ┌──────────────────────┐
+│  Supported           │   │  Not Supported       │
+│  → Use detected      │   │  → Fallback to 'en'  │
+└──────────────────────┘   └──────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│  5. Initialize i18next with detected language           │
+│  6. Update tray menu language                           │
+│  7. App ready                                           │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
