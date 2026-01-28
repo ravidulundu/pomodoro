@@ -25,14 +25,12 @@ export function AboutDialog() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Timer className="w-5 h-5" />
-            Pomodoro Timer
+            pomodoro
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 text-sm text-muted-foreground">
           <p className="font-mono text-xs">v0.1.0</p>
-          <p>
-            CachyOS / Arch Linux için geliştirilmiş Pomodoro zamanlayıcısı.
-          </p>
+          <p>CachyOS / Arch Linux için geliştirilmiş Pomodoro zamanlayıcısı.</p>
           <div className="pt-2 border-t text-xs space-y-1">
             <p>Tauri v2 + React + Rust</p>
             <p>Geliştirici: Osman Dulundu</p>

@@ -4,7 +4,17 @@
       "Bash(tree:*)",
       "Bash(cargo check:*)",
       "Bash(npm run build:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(namcap:*)",
+      "Bash(shellcheck:*)",
+      "Bash(sudo pacman:*)",
+      "Bash(desktop-file-validate:*)",
+      "Bash(convert:*)",
+      "Bash(makepkg:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run tauri:*)",
+      "Bash(git add:*)"
     ]
   }
 }

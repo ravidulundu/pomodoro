@@ -24,7 +24,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-notification = "2"
 tauri-plugin-global-shortcut = "2"
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.32", features = [] }
 chrono = { version = "0.4", features = ["serde"] }
 rodio = "0.19"
 zbus = "4"

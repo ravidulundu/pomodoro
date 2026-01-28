@@ -38,6 +38,11 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --bg-gradient: radial-gradient(
+    circle at top center,
+    oklch(0.95 0.02 264) 0%,
+    oklch(1 0 0) 100%
+  );
 }
 
 @media (prefers-color-scheme: dark) {
@@ -74,6 +79,11 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+    --bg-gradient: radial-gradient(
+      circle at top center,
+      oklch(0.25 0.05 264) 0%,
+      oklch(0.145 0 0) 100%
+    );
   }
 }
 
@@ -143,11 +153,8 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background: radial-gradient(
-      circle at top center,
-      oklch(0.25 0.05 264) 0%,
-      oklch(0.145 0 0) 100%
-    );
+    background: var(--bg-gradient);
+    font-family: system-ui, sans-serif;
     min-height: 100vh;
     overflow: hidden;
     user-select: none;

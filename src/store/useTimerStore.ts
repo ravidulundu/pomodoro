@@ -18,14 +18,17 @@ export interface TimerSettings {
 
 type TimerMode = "work" | "shortBreak" | "longBreak";
 
-function getNotificationBody(previousMode: string, currentMode: string): string {
+function getNotificationBody(
+  previousMode: string,
+  currentMode: string,
+): string {
   if (previousMode !== "work") return "Mola bitti, çalışmaya devam!";
   return currentMode === "longBreak"
     ? "Harika iş! Uzun mola zamanı."
     : "İyi çalışma! Kısa mola zamanı.";
 }
 
-async function sendTimerNotification(body: string, actionTypeId?: string) {
+async function sendTimerNotification(body: string) {
   const { isPermissionGranted, requestPermission, sendNotification } =
     await import("@tauri-apps/plugin-notification");
   let granted = await isPermissionGranted();
@@ -34,7 +37,7 @@ async function sendTimerNotification(body: string, actionTypeId?: string) {
     granted = permission === "granted";
   }
   if (granted) {
-    sendNotification({ title: "Pomodoro", body, actionTypeId });
+    sendNotification({ title: "Pomodoro", body });
   }
 }
 
@@ -80,16 +83,16 @@ export const useTimerStore = create<TimerState>()(
       },
 
       tick: () => {
-        const {
-          timeLeft,
-          isActive,
-          mode,
-          sessionsCompleted,
-          settings,
-        } = get();
-        if (isActive && timeLeft > 1) {
+        const { timeLeft, isActive, mode, sessionsCompleted, settings } = get();
+
+        if (!isActive) return;
+
+        if (timeLeft > 0) {
           set({ timeLeft: timeLeft - 1, lastTickTimestamp: Date.now() });
-        } else if (isActive && timeLeft === 1) {
+        }
+
+        // Kalan süre 0 olduysa (yukarıdaki azaltma sonrası veya direkt 0 ise)
+        if (get().timeLeft === 0) {
           // Timer bitti
           invoke("stop_sound").catch(() => {});
 
@@ -120,14 +123,13 @@ export const useTimerStore = create<TimerState>()(
           const elapsed = settings[mode] * 60;
           invoke("save_session", { state: mode, elapsed }).catch(() => {});
 
-          // Bildirim gönder
+          // Bildirim gönder ve ses çal
           const soundName = mode === "work" ? "bell" : "loud-bell";
           invoke("play_sound", { name: soundName }).catch(() => {});
 
           const { mode: currentMode } = get();
           const body = getNotificationBody(mode, currentMode);
-          const actionType = mode === "work" ? "work-done" : "break-done";
-          sendTimerNotification(body, actionType).catch(() => {});
+          sendTimerNotification(body).catch(() => {});
         }
       },
 

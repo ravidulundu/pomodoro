@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { invoke } from "@tauri-apps/api/core";
 import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface DayStat {
   date: string;
@@ -98,7 +98,7 @@ function BarChart({
             {value > 0 ? value : ""}
           </span>
           <div
-            className="w-full bg-linear-to-t from-primary/80 to-primary/30 rounded-t-lg transition-all duration-500 min-h-[2px] group-hover/bar:from-primary group-hover/bar:to-primary/50 group-hover/bar:shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+            className="w-full bg-linear-to-t from-primary/80 to-primary/30 rounded-t-lg transition-all duration-500 min-h-0.5 group-hover/bar:from-primary group-hover/bar:to-primary/50 group-hover/bar:shadow-[0_0_15px_rgba(var(--primary),0.3)]"
             style={{ height: `${(value / barMax) * 85}%` }}
           />
           <span className="text-[10px] font-medium text-muted-foreground mt-2 opacity-60">
@@ -123,43 +123,25 @@ export function StatsView() {
   const [weeklyStats, setWeeklyStats] = useState<DayStat[]>([]);
   const [monthlyStats, setMonthlyStats] = useState<DayStat[]>([]);
 
-  const fetchDaily = useCallback(async () => {
-    try {
-      const stat = await invoke<DayStat>("get_daily_stats", {
-        date: currentDate,
-      });
-      setDailyStat(stat);
-    } catch {
-      setDailyStat({ date: currentDate, count: 0, total_minutes: 0 });
-    }
-  }, [currentDate]);
-
-  const fetchWeekly = useCallback(async () => {
-    try {
-      const stats = await invoke<DayStat[]>("get_weekly_stats", { weekStart });
-      setWeeklyStats(stats);
-    } catch {
-      setWeeklyStats([]);
-    }
-  }, [weekStart]);
-
-  const fetchMonthly = useCallback(async () => {
-    try {
-      const stats = await invoke<DayStat[]>("get_monthly_stats", {
-        year: monthYear.year,
-        month: monthYear.month,
-      });
-      setMonthlyStats(stats);
-    } catch {
-      setMonthlyStats([]);
-    }
-  }, [monthYear]);
-
   useEffect(() => {
-    if (viewMode === "daily") fetchDaily();
-    if (viewMode === "weekly") fetchWeekly();
-    if (viewMode === "monthly") fetchMonthly();
-  }, [viewMode, fetchDaily, fetchWeekly, fetchMonthly]);
+    let cancelled = false;
+
+    if (viewMode === "daily") {
+      invoke<DayStat>("get_daily_stats", { date: currentDate })
+        .then((stat) => { if (!cancelled) setDailyStat(stat); })
+        .catch(() => { if (!cancelled) setDailyStat({ date: currentDate, count: 0, total_minutes: 0 }); });
+    } else if (viewMode === "weekly") {
+      invoke<DayStat[]>("get_weekly_stats", { weekStart })
+        .then((stats) => { if (!cancelled) setWeeklyStats(stats); })
+        .catch(() => { if (!cancelled) setWeeklyStats([]); });
+    } else if (viewMode === "monthly") {
+      invoke<DayStat[]>("get_monthly_stats", { year: monthYear.year, month: monthYear.month })
+        .then((stats) => { if (!cancelled) setMonthlyStats(stats); })
+        .catch(() => { if (!cancelled) setMonthlyStats([]); });
+    }
+
+    return () => { cancelled = true; };
+  }, [viewMode, currentDate, weekStart, monthYear]);
 
   const navigate = (direction: -1 | 1) => {
     if (viewMode === "daily") {
@@ -306,7 +288,7 @@ export function StatsView() {
               {monthData.map((value, i) => (
                 <div
                   key={monthDays[i]}
-                  className="flex-1 bg-linear-to-t from-primary/80 to-primary/20 hover:from-primary rounded-t-sm transition-all duration-500 min-h-[2px] hover:shadow-[0_0_10px_rgba(var(--primary),0.2)]"
+                  className="flex-1 bg-linear-to-t from-primary/80 to-primary/20 hover:from-primary rounded-t-sm transition-all duration-500 min-h-0.5 hover:shadow-[0_0_10px_rgba(var(--primary),0.2)]"
                   style={{ height: `${(value / monthMax) * 100}%` }}
                   title={`${monthDays[i]}: ${value} pomodoro`}
                 />

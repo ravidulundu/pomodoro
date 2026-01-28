@@ -20,7 +20,7 @@
         "minHeight": 620,
         "resizable": true,
         "decorations": true,
-        "transparent": true
+        "transparent": false
       }
     ],
     "security": {
@@ -38,16 +38,14 @@
     ],
     "icon": [
       "icons/32x32.png",
-      "icons/work.png",
-      "icons/short-break.png",
-      "icons/long-break.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
+      "icons/icon.png",
       "icons/icon.icns",
       "icons/icon.ico"
     ]
   },
   "plugins": {
-    "notification": {}
+    "notification": null
   }
 }

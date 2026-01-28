@@ -2,6 +2,12 @@
 src-tauri/target
 src-tauri/gen
 
+# makepkg build artifacts
+src/pomodoro-tauri-*/
+pkg/
+*.pkg.tar.*
+*.tar.gz
+
 # Logs
 logs
 *.log

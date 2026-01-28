@@ -21,13 +21,22 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 use std::path::PathBuf;
 
 fn resolve_path(app: &AppHandle, name: &str, subdir: &str) -> Option<PathBuf> {
-    // Production: resource dizini
+    // Production: Tauri bundle resource dizini
     if let Ok(path) = app
         .path()
         .resolve(name, tauri::path::BaseDirectory::Resource)
     {
         if path.exists() {
             return Some(path);
+        }
+    }
+    // System-wide kurulum: /usr/share/pomodoro-tauri/
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(exe_dir) = exe.parent() {
+            let sys_path = exe_dir.join("../share/pomodoro-tauri").join(name);
+            if sys_path.exists() {
+                return Some(sys_path);
+            }
         }
     }
     // Dev modu: proje dizini
@@ -198,7 +207,7 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let _tray = TrayIconBuilder::with_id("main_tray")
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&tray_menu)
-        .tooltip("Pomodoro Timer")
+        .tooltip("pomodoro")
         .show_menu_on_left_click(false)
         .on_tray_icon_event(|tray: &TrayIcon, event: TrayIconEvent| {
             if let TrayIconEvent::Click {
@@ -279,15 +288,15 @@ pub fn run() {
             let dbus_handle = app.handle().clone();
             let dbus_state = shared_state.clone();
             tauri::async_runtime::spawn(async move {
-                match dbus::start_dbus_service(dbus_handle, dbus_state).await {
-                    Ok(_conn) => {
-                        // Bağlantı canlı kalması için sonsuz bekle
-                        std::future::pending::<()>().await;
-                    }
+                let _conn = match dbus::start_dbus_service(dbus_handle, dbus_state).await {
+                    Ok(conn) => conn,
                     Err(e) => {
                         eprintln!("D-Bus service failed to start: {}", e);
+                        return;
                     }
-                }
+                };
+                // D-Bus bağlantısı uygulama ömrü boyunca canlı kalmalı
+                std::future::pending::<()>().await;
             });
 
             // Idle detection başlat

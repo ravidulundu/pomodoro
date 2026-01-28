@@ -14,12 +14,14 @@ const POLL_INTERVAL_SECS: u64 = 10;
 
 pub struct IdleDetector {
     enabled: Arc<AtomicBool>,
+    shutdown: Arc<AtomicBool>,
 }
 
 impl IdleDetector {
     pub fn new() -> Self {
         Self {
             enabled: Arc::new(AtomicBool::new(false)),
+            shutdown: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -30,6 +32,7 @@ impl IdleDetector {
     /// Arka plan görevi olarak idle algılamayı başlat
     pub fn start(&self, app_handle: AppHandle) {
         let enabled = self.enabled.clone();
+        let shutdown = self.shutdown.clone();
 
         tauri::async_runtime::spawn(async move {
             let conn = match Connection::session().await {
@@ -62,6 +65,10 @@ impl IdleDetector {
             loop {
                 tokio::time::sleep(Duration::from_secs(POLL_INTERVAL_SECS)).await;
 
+                if shutdown.load(Ordering::SeqCst) {
+                    break;
+                }
+
                 if !enabled.load(Ordering::SeqCst) {
                     was_idle = false;
                     continue;
@@ -86,5 +93,11 @@ impl IdleDetector {
                 was_idle = is_idle;
             }
         });
+    }
+}
+
+impl Drop for IdleDetector {
+    fn drop(&mut self) {
+        self.shutdown.store(true, Ordering::SeqCst);
     }
 }

@@ -35,11 +35,14 @@ impl SharedTimerState {
     }
 
     pub fn update(&self, state: String, time_left: u32, is_active: bool, sessions_completed: u32) {
-        if let Ok(mut s) = self.status.lock() {
-            s.state = state;
-            s.time_left = time_left;
-            s.is_active = is_active;
-            s.sessions_completed = sessions_completed;
+        match self.status.lock() {
+            Ok(mut s) => {
+                s.state = state;
+                s.time_left = time_left;
+                s.is_active = is_active;
+                s.sessions_completed = sessions_completed;
+            }
+            Err(e) => eprintln!("SharedTimerState::update mutex poisoned: {}", e),
         }
     }
 }
@@ -52,7 +55,7 @@ struct PomodoroService {
     app_handle: AppHandle,
 }
 
-#[interface(name = "com.osmandulundu.Pomodoro")]
+#[interface(name = "com.osmandulundu.pomodoro")]
 impl PomodoroService {
     /// Timer'ı başlat veya duraklat (toggle)
     async fn toggle(&self) {
@@ -91,7 +94,10 @@ impl PomodoroService {
             .status
             .lock()
             .map(|s| s.state.clone())
-            .unwrap_or_else(|_| "work".to_string())
+            .unwrap_or_else(|e| {
+                eprintln!("D-Bus state property mutex poisoned: {}", e);
+                "work".to_string()
+            })
     }
 
     /// Kalan süre (saniye)
@@ -101,7 +107,10 @@ impl PomodoroService {
             .status
             .lock()
             .map(|s| s.time_left)
-            .unwrap_or(0)
+            .unwrap_or_else(|e| {
+                eprintln!("D-Bus time_left property mutex poisoned: {}", e);
+                0
+            })
     }
 
     /// Timer aktif mi
@@ -111,7 +120,10 @@ impl PomodoroService {
             .status
             .lock()
             .map(|s| s.is_active)
-            .unwrap_or(false)
+            .unwrap_or_else(|e| {
+                eprintln!("D-Bus is_active property mutex poisoned: {}", e);
+                false
+            })
     }
 
     /// Tamamlanan oturum sayısı
@@ -121,7 +133,10 @@ impl PomodoroService {
             .status
             .lock()
             .map(|s| s.sessions_completed)
-            .unwrap_or(0)
+            .unwrap_or_else(|e| {
+                eprintln!("D-Bus sessions_completed property mutex poisoned: {}", e);
+                0
+            })
     }
 }
 
@@ -136,8 +151,8 @@ pub async fn start_dbus_service(
     };
 
     let conn = connection::Builder::session()?
-        .name("com.osmandulundu.Pomodoro")?
-        .serve_at("/com/osmandulundu/Pomodoro", service)?
+        .name("com.osmandulundu.pomodoro")?
+        .serve_at("/com/osmandulundu/pomodoro", service)?
         .build()
         .await?;
 

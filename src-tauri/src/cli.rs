@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use zbus::Connection;
 
 #[derive(Parser)]
-#[command(name = "pomodoro", about = "Pomodoro Timer - CachyOS")]
+#[command(name = "pomodoro", about = "pomodoro - CachyOS")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -38,9 +38,9 @@ pub async fn handle_cli(command: &Commands) -> Result<bool, Box<dyn std::error::
     };
 
     let proxy: zbus::Proxy<'_> = zbus::proxy::Builder::new(&conn)
-        .destination("com.osmandulundu.Pomodoro")?
-        .path("/com/osmandulundu/Pomodoro")?
-        .interface("com.osmandulundu.Pomodoro")?
+        .destination("com.osmandulundu.pomodoro")?
+        .path("/com/osmandulundu/pomodoro")?
+        .interface("com.osmandulundu.pomodoro")?
         .build()
         .await?;
 

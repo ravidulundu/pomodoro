@@ -5,6 +5,11 @@ use clap::Parser;
 use pomodoro_lib::cli::{Cli, handle_cli};
 
 fn main() {
+    // Force Server-Side Decorations (SSD) on Wayland/KDE.
+    // Must be set BEFORE Tauri/GTK initializes.
+    std::env::set_var("GTK_CSD", "0");
+    std::env::set_var("GDK_BACKEND", "x11");
+
     let cli = Cli::parse();
 
     if let Some(command) = &cli.command {

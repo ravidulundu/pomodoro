@@ -42,6 +42,12 @@ impl Database {
             CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(date);",
         )?;
 
+        // 1 yıldan eski oturumları temizle
+        let cutoff = (Utc::now() - chrono::Duration::days(365))
+            .format("%Y-%m-%d")
+            .to_string();
+        let _ = conn.execute("DELETE FROM sessions WHERE date < ?1", params![cutoff]);
+
         Ok(Self {
             conn: Mutex::new(conn),
         })

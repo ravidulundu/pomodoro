@@ -11,9 +11,11 @@ pub struct AudioPlayer {
     sink: Mutex<Option<Sink>>,
 }
 
-// rodio::OutputStream cpal::Stream içerir ve PhantomData<*mut ()> nedeniyle
-// Send/Sync değildir. Ancak AudioPlayer tüm mutable erişimi Mutex ile koruduğundan
-// ve ses thread'i rodio/cpal tarafından yönetildiğinden güvenlidir.
+// rodio::OutputStream, cpal::Stream içerir ve PhantomData<*mut ()> nedeniyle !Send/!Sync'tir.
+// Güvenlik gerekçesi:
+// - `_stream`: Sadece lifetime için tutulur, hiçbir yerde erişilmez.
+// - `stream_handle`: OutputStreamHandle dahili olarak Arc tabanlıdır, thread-safe paylaşılır.
+// - `sink`: Mutex<Option<Sink>> ile korunur.
 unsafe impl Send for AudioPlayer {}
 unsafe impl Sync for AudioPlayer {}
 
@@ -79,10 +81,13 @@ impl AudioPlayer {
 
     /// Sesi durdur
     pub fn stop(&self) {
-        if let Ok(mut guard) = self.sink.lock() {
-            if let Some(sink) = guard.take() {
-                sink.stop();
+        match self.sink.lock() {
+            Ok(mut guard) => {
+                if let Some(sink) = guard.take() {
+                    sink.stop();
+                }
             }
+            Err(e) => eprintln!("AudioPlayer::stop mutex poisoned: {}", e),
         }
     }
 

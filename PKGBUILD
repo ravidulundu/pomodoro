@@ -5,31 +5,38 @@ pkgrel=1
 pkgdesc="A professional Pomodoro Timer built with Tauri and React, optimized for Arch Linux."
 arch=('x86_64' 'aarch64')
 url="https://github.com/ravidulundu/pomodoro"
-license=('GPL3')
-depends=('webkit2gtk-4.1' 'libayatana-appindicator' 'gst-plugins-good' 'gst-plugins-base')
-makedepends=('npm' 'cargo' 'nodejs')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/ravidulundu/pomodoro/archive/v$pkgver.tar.gz")
-sha256sums=('SKIP') # Run updpkgsums before actual submission
-
-check() {
-  cd "$pkgname-$pkgver"
-  # Optional: run tests if available
-  # npm test
-}
+license=('GPL-3.0-or-later')
+depends=('webkit2gtk-4.1' 'libayatana-appindicator' 'sqlite')
+makedepends=('rust' 'npm' 'cargo' 'nodejs')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
 
 build() {
-  cd "$pkgname-$pkgver"
+  cd "pomodoro-$pkgver"
   npm install
-  npm run tauri build
+  npm run tauri build -- --no-bundle
 }
 
 package() {
-  cd "$pkgname-$pkgver"
+  cd "pomodoro-$pkgver"
   install -Dm755 "src-tauri/target/release/pomodoro" "$pkgdir/usr/bin/pomodoro-tauri"
 
-  # Icons
-  install -Dm644 "public/icons/kde-pomodoro.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/pomodoro-tauri.svg"
+  # Ses dosyaları ve tray icon'ları (/usr/share/pomodoro-tauri/)
+  install -d "$pkgdir/usr/share/pomodoro-tauri"
+  install -Dm644 public/sounds/*.ogg -t "$pkgdir/usr/share/pomodoro-tauri/"
+  for icon in work.png short-break.png long-break.png; do
+    install -Dm644 "src-tauri/icons/$icon" "$pkgdir/usr/share/pomodoro-tauri/$icon"
+  done
+
+  # Uygulama ikonları (XDG hicolor tema - tüm boyutlar)
+  for size in 16 24 32 48 64 128 256 512; do
+    install -Dm644 "public/icons/${size}x${size}/kde-pomodoro.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/pomodoro-tauri.png"
+  done
+  install -Dm644 "public/icons/kde-pomodoro.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/pomodoro-tauri.svg"
 
   # Desktop Entry
-  install -Dm644 "data/pomodoro-tauri.desktop" "$pkgdir/usr/share/applications/pomodoro-tauri.desktop"
+  install -Dm644 "data/pomodoro-tauri.desktop" \
+    "$pkgdir/usr/share/applications/pomodoro-tauri.desktop"
 }

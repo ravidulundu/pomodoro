@@ -47,45 +47,8 @@ function App() {
 
   // Event listener'ları
   useEffect(() => {
-    let unlisten: (() => void) | undefined;
-
-    // Bildirim aksiyonlarını kaydet
-    import("@tauri-apps/plugin-notification")
-      .then(({ registerActionTypes, onAction }) => {
-        registerActionTypes([
-          {
-            id: "work-done",
-            actions: [{ id: "skip-break", title: "Molayı Atla" }],
-          },
-          {
-            id: "break-done",
-            actions: [{ id: "start-work", title: "Çalışmaya Başla" }],
-          },
-        ]).catch((e) => console.error("Notification action types failed:", e));
-
-        onAction(({ actionTypeId }) => {
-          const s = useTimerStore.getState();
-          if (actionTypeId === "work-done") {
-            s.skip();
-          } else if (actionTypeId === "break-done" && !s.isActive) {
-            s.toggle();
-          }
-        })
-          .then((ul) => {
-            unlisten = ul;
-          })
-          .catch((e) =>
-            console.error("Notification Action Listener failed:", e),
-          );
-      })
-      .catch((e) => console.error("Notification import failed:", e));
-
-    return () => {
-      if (unlisten) unlisten();
-    };
-
     const store = useTimerStore.getState;
-    const unlisteners = [
+    const eventUnlisteners = [
       // Tray event'leri
       listen("reset-timer", () => store().reset()),
       listen("tray-start-stop", () => store().toggle()),
@@ -112,16 +75,18 @@ function App() {
     ];
 
     return () => {
-      for (const p of unlisteners) p.then((fn) => fn());
+      for (const p of eventUnlisteners) {
+        p.then((unlisten) => unlisten());
+      }
     };
   }, []);
 
   return (
-    <div className="h-screen bg-transparent select-none overflow-hidden flex flex-col">
+    <div className="h-screen w-screen flex flex-col bg-background text-white overflow-hidden select-none cursor-default">
       <StrictBreakOverlay />
 
       <main className="flex-1 relative overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-hidden pt-4">
+        <div className="flex-1 overflow-hidden">
           {activeTab === "timer" ? (
             <div className="min-h-full flex flex-col items-center justify-center animate-fade-in-up">
               <Timer />
