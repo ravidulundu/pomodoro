@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: AUR Package Issues
+    url: https://aur.archlinux.org/packages/pomodoro-tauri-bin
+    about: For installation/packaging issues, comment on AUR
+  - name: Discussions
+    url: https://github.com/ravidulundu/pomodoro/discussions
+    about: Ask questions and share ideas
